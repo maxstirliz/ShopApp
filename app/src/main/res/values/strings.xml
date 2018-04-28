@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">ShopApp</string>
+
+    <!--Main Activity-->
+    <string name="main_activity">Shopping App</string>
+    <string name="total">Total: </string>
+    <string name="name">Name</string>
+    <string name="price">Price</string>
+    <string name="number_quantity">Number/Quantity</string>
+    <string name="add_button">ADD</string>
+    <string name="go_to_cart_button">Go to\nCART</string>
+    <string name="clear_button">CLEAR</string>
+
+    <!--Cart Manager-->
+    <string name="cart_manager_activity">Cart Manager</string>
+
+    <!--List Manager-->
+    <string name="list_manager_activity">List Manager</string>
+    <string name="item"> item</string>
+    <string name="items"> items</string>
+
+    ProductRawduct Card-->
+    <string name="card_name">Name:</string>
+    <string name="card_price">Price: </string>
+
+    <!--Menues-->
+    <string name="check_all">Check All</string>
+    <string name="unckeck_all">Uncheck All</string>
+    <string name="clear_cart">Clear Cart</string>
+    <string name="clear_list">Clear List</string>
+    <string name="load_from_file">Load From File</string>
+    <string name="save_to_file">Save to File</string>
+
+    <!--Default values-->
+    <string name="default_product_name">Product</string>
+    <string name="toast_empty_fields">Both PRICE and NUMBER must be filled in!</string>
+    <string name="toast_wrong_number_format">Wrong number format!</string>
+
+</resources>

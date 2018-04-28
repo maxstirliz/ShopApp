@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--Main activity layout-->
+    <dimen name="bottom_padding_margin">0dp</dimen>
+    <dimen name="default_padding_margin">16dp</dimen>
+
+    <!--Input text size-->
+    <dimen name="input_text_size">18sp</dimen>
+
+    <!--Bottom sheet peek width-->
+    <dimen name="bottom_sheet_peek_height">52dp</dimen>
+
+</resources>
