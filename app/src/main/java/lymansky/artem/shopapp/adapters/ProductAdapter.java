@@ -8,13 +8,12 @@ import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import io.realm.Realm;
 import io.realm.RealmResults;
 import lymansky.artem.shopapp.R;
 import lymansky.artem.shopapp.model.Product;
-import lymansky.artem.shopapp.model.Utils;
+import lymansky.artem.shopapp.model.RealmController;
+import lymansky.artem.shopapp.utils.TextUtils;
 
 /**
  * Created by artem on 3/14/2018.
@@ -22,17 +21,15 @@ import lymansky.artem.shopapp.model.Utils;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductViewHolder> {
 
-    private TextView mTotal;
+    private TextView total;
     private RealmResults<Product> products;
-    private Realm mRealm;
+    private RealmController controller;
 
 
-    public ProductAdapter(Realm realm, TextView total) {
-        mRealm = realm;
-        products = realm.where(Product.class)
-                .equalTo("included", true)
-                .findAll();
-        mTotal = total;
+    public ProductAdapter(TextView total) {
+        controller = RealmController.getInstance();
+        products = controller.getProducts();
+        this.total = total;
     }
 
     @Override
@@ -45,7 +42,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     public void onBindViewHolder(ProductViewHolder holder, int position) {
         Product product = products.get(position);
         holder.mName.setText(product.getName());
-        holder.mPrice.setText(Utils.getCurrencyValue(product.getPrice() * product.getNumber()));
+        holder.mPrice.setText(TextUtils.getCurrencyValue(product.getPrice() * product.getNumber()));
         holder.mIsIncluded.setChecked(product.isIncluded());
     }
 
@@ -76,27 +73,27 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
         @Override
         public void onClick(View v) {
+            final int position = getAdapterPosition();
+            final Product product = products.get(position);
             switch (v.getId()) {
                 case R.id.card_checkbox:
-                    String uuid = products.get(getAdapterPosition()).getId();
-                    CheckBox checkBox = (CheckBox) v;
-                    final boolean check = checkBox.isChecked();
-                    final Product product = mRealm.where(Product.class).equalTo(Product.ID, uuid).findFirst();
-                    mRealm.executeTransaction(new Realm.Transaction() {
+                    controller.getRealm().executeTransaction(new Realm.Transaction() {
                         @Override
                         public void execute(Realm realm) {
-                            product.setIncluded(check);
+                            product.setIncluded(!product.isIncluded());
                             refreshTotal();
                         }
                     });
                     break;
                 case R.id.card_delete:
-                    final String id = products.get(getAdapterPosition()).getId();
-                    mRealm.executeTransaction(new Realm.Transaction(){
-
+                    controller.getRealm().executeTransaction(new Realm.Transaction(){
                         @Override
                         public void execute(Realm realm) {
-                            realm.where(Product.class).equalTo(Product.ID, id).findFirst().deleteFromRealm();
+                            if(product.isListed()) {
+                                product.setIncluded(false);
+                            } else {
+                                products.deleteFromRealm(position);
+                            }
                             refreshTotal();
                         }
                     });
@@ -112,6 +109,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 value += product.getPrice() * product.getNumber();
             }
         }
-        mTotal.setText(Utils.getCurrencyValue(value));
+        total.setText(TextUtils.getCurrencyValue(value));
     }
 }

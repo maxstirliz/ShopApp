@@ -1,4 +1,4 @@
-package lymansky.artem.shopapp;
+package lymansky.artem.shopapp.application;
 
 import android.app.Application;
 

@@ -1,4 +1,4 @@
-package lymansky.artem.shopapp.model;
+package lymansky.artem.shopapp.utils;
 
 import android.widget.EditText;
 
@@ -9,11 +9,11 @@ import java.text.NumberFormat;
  * Created by artem on 12/24/2017.
  */
 
-public final class Utils {
+public final class TextUtils {
     /**
      * Private constructor
      */
-    private Utils() {
+    private TextUtils() {
     }
 
     /**

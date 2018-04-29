@@ -12,7 +12,8 @@ import io.realm.RealmResults;
 import lymansky.artem.shopapp.R;
 import lymansky.artem.shopapp.adapters.ProductAdapter;
 import lymansky.artem.shopapp.model.Product;
-import lymansky.artem.shopapp.model.Utils;
+import lymansky.artem.shopapp.model.RealmController;
+import lymansky.artem.shopapp.utils.TextUtils;
 
 public class CartManagerActivity extends AppCompatActivity {
 
@@ -21,8 +22,7 @@ public class CartManagerActivity extends AppCompatActivity {
     private RecyclerView mRv;
     private ProductAdapter adapter;
     private TextView mTotal;
-    private Realm realm;
-    private RealmResults<Product> products;
+    private RealmController controller;
 
 
     @Override
@@ -31,13 +31,10 @@ public class CartManagerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cart_manager);
 
 //        Initializations
-        realm = Realm.getDefaultInstance();
-        products = realm.where(Product.class)
-                .equalTo(Product.INCLUDED, true)
-                .findAll();
+        controller = RealmController.getInstance();
         mTotal = findViewById(R.id.cart_manager_total);
         mRv = findViewById(R.id.cart_manager_rv);
-        adapter = new ProductAdapter(realm, mTotal);
+        adapter = new ProductAdapter(mTotal);
 
 //        Animation settings
         RecyclerView.ItemAnimator animator = new DefaultItemAnimator();
@@ -54,14 +51,14 @@ public class CartManagerActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        realm.close();
+        controller.close();
     }
 
     private String getTotal() {
         double value = 0;
-        for(Product product : products) {
+        for(Product product : controller.getProducts()) {
             value += product.getPrice() * product.getNumber();
         }
-        return Utils.getCurrencyValue(value);
+        return TextUtils.getCurrencyValue(value);
     }
 }

@@ -15,6 +15,7 @@ public class Product extends RealmObject {
 
     public static final String ID = "id";
     public static final String INCLUDED = "included";
+    public static final String LISTED = "listed";
 
     @PrimaryKey
     private String id;

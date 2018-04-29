@@ -6,9 +6,6 @@ import android.os.Bundle;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -23,12 +20,11 @@ import android.widget.Toast;
 import java.util.UUID;
 
 import io.realm.Realm;
-import io.realm.RealmList;
 import io.realm.RealmResults;
 import lymansky.artem.shopapp.R;
-import lymansky.artem.shopapp.adapters.ItemAdapter;
 import lymansky.artem.shopapp.model.Product;
-import lymansky.artem.shopapp.model.Utils;
+import lymansky.artem.shopapp.model.RealmController;
+import lymansky.artem.shopapp.utils.TextUtils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -45,8 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mClearButton;
     private TextView mGoToCart;
 
-    private Realm realm;
-    private RealmResults<Product> products;
+    private RealmController controller;
 
 
     @Override
@@ -64,10 +59,7 @@ public class MainActivity extends AppCompatActivity {
         mName = findViewById(R.id.input_name);
         mPrice = findViewById(R.id.input_price);
         mNumber = findViewById(R.id.input_number);
-        realm = Realm.getDefaultInstance();
-        products = realm.where(Product.class)
-                .equalTo(Product.INCLUDED, true)
-                .findAll();
+        controller = RealmController.getInstance();
         mTotal.setText(getTotal());
 
 //        Buttons and Listeners setup
@@ -87,19 +79,18 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Log.v(TAG, "addButton is clicked");
                 final String name = mName.getText().toString();
-                final double price = Utils.getDouble(mPrice);
-                final double number = Utils.getDouble(mNumber);
+                final double price = TextUtils.getDouble(mPrice);
+                final double number = TextUtils.getDouble(mNumber);
                 if (price == 0 || number == 0) {
                     Toast.makeText(MainActivity.this, getString(R.string.toast_wrong_number_format), Toast.LENGTH_SHORT)
                             .show();
                     setFocusShowKeyboard(mPrice);
-                    return;
                 } else {
-                    realm.executeTransaction(new Realm.Transaction() {
+                    controller.getRealm().executeTransaction(new Realm.Transaction() {
                         @Override
                         public void execute(Realm realm) {
                             Product product = realm.createObject(Product.class, UUID.randomUUID().toString());
-                            product.setName(Utils.checkName(name));
+                            product.setName(TextUtils.checkName(name));
                             product.setPrice(price);
                             product.setNumber(number);
                             product.setBought(true);
@@ -125,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         mGoToCart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(products.isEmpty()) {
+                if(controller.getProducts().isEmpty()) {
                     Toast.makeText(MainActivity.this, "The Cart is empty", Toast.LENGTH_SHORT)
                             .show();
                 } else {
@@ -139,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if(actionId == EditorInfo.IME_ACTION_DONE) {
-                    if(!getTotal().equals(Utils.getCurrencyValue(0))) {
+                    if(!getTotal().equals(TextUtils.getCurrencyValue(0))) {
                         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                         mAddButton.setText(getString(R.string.add_button) + " " + getTotal());
@@ -172,16 +163,16 @@ public class MainActivity extends AppCompatActivity {
 
     private String getTotal() {
         double value = 0;
-        for(Product product : products) {
+        for(Product product : controller.getProducts()) {
             value += product.getPrice() * product.getNumber();
         }
-        return Utils.getCurrencyValue(value);
+        return TextUtils.getCurrencyValue(value);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        realm.close();
+        controller.close();
     }
 
     @Override
