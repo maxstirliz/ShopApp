@@ -16,9 +16,10 @@ public class Product extends RealmObject {
     public static final String ID = "id";
     public static final String INCLUDED = "included";
     public static final String LISTED = "listed";
+    public static final String BOUGHT = "bought";
 
     @PrimaryKey
-    private String id;
+    private long id;
     private String name;
     private double price;
     private double number;
@@ -26,7 +27,7 @@ public class Product extends RealmObject {
     private boolean listed;
     private boolean bought;
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 
@@ -52,6 +53,10 @@ public class Product extends RealmObject {
 
     public void setNumber(double number) {
         this.number = number;
+    }
+
+    public double getTotal() {
+        return price * number;
     }
 
     public boolean isIncluded() {

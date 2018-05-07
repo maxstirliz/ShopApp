@@ -23,7 +23,6 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 import lymansky.artem.shopapp.R;
 import lymansky.artem.shopapp.model.Product;
-import lymansky.artem.shopapp.model.RealmController;
 import lymansky.artem.shopapp.utils.TextUtils;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,8 +40,8 @@ public class MainActivity extends AppCompatActivity {
     private Button mClearButton;
     private TextView mGoToCart;
 
-    private RealmController controller;
-
+    private Realm realmInstance;
+    private RealmResults<Product> productsBought;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +50,10 @@ public class MainActivity extends AppCompatActivity {
 
 //        Initializations
         LinearLayout llBottomSheet = findViewById(R.id.bottom_sheet);
+        realmInstance = Realm.getDefaultInstance();
+        productsBought = realmInstance.where(Product.class)
+                .equalTo(Product.BOUGHT, true)
+                .findAll();
         mBottomSheetBehavior = BottomSheetBehavior.from(llBottomSheet);
         mAddButton = findViewById(R.id.add_button);
         mClearButton = findViewById(R.id.clear_button);
@@ -59,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
         mName = findViewById(R.id.input_name);
         mPrice = findViewById(R.id.input_price);
         mNumber = findViewById(R.id.input_number);
-        controller = RealmController.getInstance();
         mTotal.setText(getTotal());
 
 //        Buttons and Listeners setup
@@ -86,21 +88,21 @@ public class MainActivity extends AppCompatActivity {
                             .show();
                     setFocusShowKeyboard(mPrice);
                 } else {
-                    controller.getRealm().executeTransaction(new Realm.Transaction() {
+                    realmInstance.executeTransaction(new Realm.Transaction() {
                         @Override
                         public void execute(Realm realm) {
-                            Product product = realm.createObject(Product.class, UUID.randomUUID().toString());
+                            Product product = realmInstance.createObject(Product.class, System.currentTimeMillis());
                             product.setName(TextUtils.checkName(name));
                             product.setPrice(price);
                             product.setNumber(number);
                             product.setBought(true);
                             product.setIncluded(true);
                             product.setListed(false);
-                            clearFields();
-                            setFocusShowKeyboard(mName);
-                            mTotal.setText(getTotal());
                         }
                     });
+                    clearFields();
+                    setFocusShowKeyboard(mName);
+                    mTotal.setText(getTotal());
                 }
             }
         });
@@ -116,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         mGoToCart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(controller.getProducts().isEmpty()) {
+                if(realmInstance.isEmpty()) {
                     Toast.makeText(MainActivity.this, "The Cart is empty", Toast.LENGTH_SHORT)
                             .show();
                 } else {
@@ -163,8 +165,10 @@ public class MainActivity extends AppCompatActivity {
 
     private String getTotal() {
         double value = 0;
-        for(Product product : controller.getProducts()) {
-            value += product.getPrice() * product.getNumber();
+        for(Product product : productsBought) {
+            if(product.isIncluded()) {
+                value += product.getTotal();
+            }
         }
         return TextUtils.getCurrencyValue(value);
     }
@@ -172,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        controller.close();
+        realmInstance.close();
     }
 
     @Override
