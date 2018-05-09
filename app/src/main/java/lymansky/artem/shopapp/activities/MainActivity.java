@@ -6,14 +6,20 @@ import android.os.Bundle;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatImageButton;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,9 +45,12 @@ public class MainActivity extends AppCompatActivity {
     private Button mAddButton;
     private Button mClearButton;
     private TextView mGoToCart;
+    private Switch mSwitch;
+    private TextView mSwitchText;
 
     private Realm realmInstance;
     private RealmResults<Product> productsBought;
+    private RealmResults<Product> items;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +63,13 @@ public class MainActivity extends AppCompatActivity {
         productsBought = realmInstance.where(Product.class)
                 .equalTo(Product.BOUGHT, true)
                 .findAll();
+        items = realmInstance.where(Product.class)
+                .equalTo(Product.LISTED, true)
+                .findAll()
+                .sort(Product.ID);
+        mSwitch = findViewById(R.id.modeSwitch);
+        mSwitch.setChecked(true);
+        mSwitchText = findViewById(R.id.modeText);
         mBottomSheetBehavior = BottomSheetBehavior.from(llBottomSheet);
         mAddButton = findViewById(R.id.add_button);
         mClearButton = findViewById(R.id.clear_button);
@@ -63,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
         mPrice = findViewById(R.id.input_price);
         mNumber = findViewById(R.id.input_number);
         mTotal.setText(getTotal());
+
+        setUpMode();
 
 //        Buttons and Listeners setup
         mNumber.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -79,11 +97,10 @@ public class MainActivity extends AppCompatActivity {
         mAddButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.v(TAG, "addButton is clicked");
                 final String name = mName.getText().toString();
                 final double price = TextUtils.getDouble(mPrice);
                 final double number = TextUtils.getDouble(mNumber);
-                if (price == 0 || number == 0) {
+                if (mSwitch.isChecked() || price == 0 || number == 0) {
                     Toast.makeText(MainActivity.this, getString(R.string.toast_wrong_number_format), Toast.LENGTH_SHORT)
                             .show();
                     setFocusShowKeyboard(mPrice);
@@ -95,9 +112,17 @@ public class MainActivity extends AppCompatActivity {
                             product.setName(TextUtils.checkName(name));
                             product.setPrice(price);
                             product.setNumber(number);
-                            product.setBought(true);
-                            product.setIncluded(true);
-                            product.setListed(false);
+
+
+                            if(mSwitch.isChecked()) {
+                                product.setBought(true);
+                                product.setIncluded(true);
+                                product.setListed(false);
+                            } else {
+                                product.setBought(false);
+                                product.setIncluded(false);
+                                product.setListed(true);
+                            }
                         }
                     });
                     clearFields();
@@ -157,6 +182,18 @@ public class MainActivity extends AppCompatActivity {
         setFocusShowKeyboard(mName);
     }
 
+    private void setUpMode () {
+        if(mSwitch.isChecked()) {
+            mNumber.setEnabled(true);
+            mPrice.setEnabled(true);
+            mSwitchText.setText(getString(R.string.switchOn));
+        } else {
+            mNumber.setEnabled(false);
+            mPrice.setEnabled(false);
+            mSwitchText.setText(getString(R.string.switchOff));
+        }
+    }
+
     private void setFocusShowKeyboard(EditText field) {
         field.requestFocus();
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -183,5 +220,60 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         mTotal.setText(getTotal());
+        setUpMode();
+    }
+
+//    Adapter stuff
+
+    protected class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+        TextView name;
+        CheckBox bought;
+        AppCompatImageButton delete;
+
+        Product boundItem;
+
+        public ItemViewHolder(View itemView) {
+            super(itemView);
+
+            name = itemView.findViewById(R.id.item_name);
+            bought = itemView.findViewById(R.id.item_checkbox);
+            delete = itemView.findViewById(R.id.item_delete);
+
+            name.setOnClickListener(this);
+            delete.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            switch (view.getId()) {
+                case R.id.item_delete:
+                    break;
+                case R.id.item_name:
+                    break;
+            }
+        }
+    }
+
+    private class ItemAdapter extends RecyclerView.Adapter<ItemViewHolder> {
+
+        @Override
+        public ItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_card, parent, false);
+            return new ItemViewHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(ItemViewHolder holder, int position) {
+            Product item = items.get(position);
+            holder.boundItem = item;
+            holder.name.setText(item.getName());
+            holder.bought.setChecked(item.isListed());
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
     }
 }

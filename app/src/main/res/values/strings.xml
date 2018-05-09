@@ -10,6 +10,8 @@
     <string name="add_button">ADD</string>
     <string name="go_to_cart_button">Go to\nCART</string>
     <string name="clear_button">CLEAR</string>
+    <string name="switchOn">Shopping</string>
+    <string name="switchOff">List Mode</string>
 
     <!--Cart Manager-->
     <string name="cart_manager_activity">Cart Manager</string>

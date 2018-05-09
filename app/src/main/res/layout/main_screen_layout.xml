@@ -15,6 +15,21 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <Switch
+            android:id="@+id/modeSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="8dp" />
+
+        <TextView
+            android:id="@+id/modeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/modeSwitch" />
+
         <TextView
             android:id="@+id/total"
             android:layout_width="wrap_content"
@@ -70,8 +85,8 @@
             android:id="@+id/input_number"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:imeOptions="actionDone"
             android:hint="@string/number_quantity"
+            android:imeOptions="actionDone"
             android:inputType="numberDecimal"
             android:textSize="18sp" />
     </android.support.design.widget.TextInputLayout>
@@ -101,10 +116,10 @@
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_gravity="center"
-        android:textSize="22sp"
         android:background="@drawable/circle"
         android:gravity="center"
         android:text="@string/go_to_cart_button"
-        android:textColor="@android:color/black" />
+        android:textColor="@android:color/black"
+        android:textSize="22sp" />
 
 </LinearLayout>

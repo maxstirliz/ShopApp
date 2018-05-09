@@ -15,6 +15,7 @@ import android.widget.TextView;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
+import io.realm.Sort;
 import lymansky.artem.shopapp.R;
 import lymansky.artem.shopapp.model.Product;
 import lymansky.artem.shopapp.utils.TextUtils;
@@ -39,7 +40,7 @@ public class CartManagerActivity extends AppCompatActivity {
         realmInstance = Realm.getDefaultInstance();
         productsBought = realmInstance.where(Product.class)
                 .equalTo(Product.BOUGHT, true)
-                .findAll().sort(Product.ID);
+                .findAll().sort(Product.ID, Sort.DESCENDING);
         mTotal = findViewById(R.id.cart_manager_total);
         mRv = findViewById(R.id.cart_manager_rv);
         adapter = new ProductAdapter();
@@ -69,10 +70,16 @@ public class CartManagerActivity extends AppCompatActivity {
         realmInstance.close();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mTotal.setText(getTotal());
+    }
+
     private String getTotal() {
         double value = 0;
-        for(Product product : productsBought) {
-            if(product.isIncluded()) {
+        for (Product product : productsBought) {
+            if (product.isIncluded()) {
                 value += product.getTotal();
             }
         }
@@ -80,7 +87,7 @@ public class CartManagerActivity extends AppCompatActivity {
     }
 
     private class ProductViewHolder extends RecyclerView.ViewHolder
-    implements View.OnClickListener {
+            implements View.OnClickListener {
 
         private CheckBox included;
         private TextView name;
@@ -118,7 +125,7 @@ public class CartManagerActivity extends AppCompatActivity {
                     adapter.notifyDataSetChanged();
                     break;
                 case R.id.card_delete:
-                    if(boundProduct.isListed()) {
+                    if (boundProduct.isListed()) {
                         realmInstance.executeTransaction(new Realm.Transaction() {
                             @Override
                             public void execute(Realm realm) {
