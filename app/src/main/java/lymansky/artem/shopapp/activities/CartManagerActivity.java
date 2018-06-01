@@ -15,19 +15,20 @@ import android.widget.TextView;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
-import io.realm.Sort;
 import lymansky.artem.shopapp.R;
 import lymansky.artem.shopapp.model.Product;
+import lymansky.artem.shopapp.utils.RealmHelper;
 import lymansky.artem.shopapp.utils.TextUtils;
 
 public class CartManagerActivity extends AppCompatActivity {
 
     private static final long ANIMATION_DURATION = 150L;
 
-    private RecyclerView mRv;
+    private RecyclerView rv;
     private ProductAdapter adapter;
-    private TextView mTotal;
+    private TextView total;
 
+    private RealmHelper realmHelper;
     private Realm realmInstance;
     private RealmResults<Product> productsBought;
 
@@ -37,12 +38,11 @@ public class CartManagerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cart_manager);
 
 //        Initializations
-        realmInstance = Realm.getDefaultInstance();
-        productsBought = realmInstance.where(Product.class)
-                .equalTo(Product.BOUGHT, true)
-                .findAll().sort(Product.ID, Sort.DESCENDING);
-        mTotal = findViewById(R.id.cart_manager_total);
-        mRv = findViewById(R.id.cart_manager_rv);
+        realmHelper = RealmHelper.getHelper();
+        realmInstance = realmHelper.getRealm();
+        productsBought = realmHelper.getProducts();
+        total = findViewById(R.id.cart_manager_total);
+        rv = findViewById(R.id.cart_manager_rv);
         adapter = new ProductAdapter();
 
 //        Animation settings
@@ -50,11 +50,11 @@ public class CartManagerActivity extends AppCompatActivity {
         animator.setRemoveDuration(ANIMATION_DURATION);
 
 //        RV setup
-        mRv.setHasFixedSize(true);
-        mRv.setLayoutManager(new LinearLayoutManager(this));
-        mRv.setAdapter(adapter);
-        mRv.setItemAnimator(animator);
-        mTotal.setText(getTotal());
+        rv.setHasFixedSize(true);
+        rv.setLayoutManager(new LinearLayoutManager(this));
+        rv.setAdapter(adapter);
+        rv.setItemAnimator(animator);
+        total.setText(getTotal());
 
         productsBought.addChangeListener(new RealmChangeListener<RealmResults<Product>>() {
             @Override
@@ -67,13 +67,13 @@ public class CartManagerActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        realmInstance.close();
+        realmHelper.close();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mTotal.setText(getTotal());
+        total.setText(getTotal());
     }
 
     private String getTotal() {
@@ -111,44 +111,20 @@ public class CartManagerActivity extends AppCompatActivity {
         public void onClick(View view) {
             switch (view.getId()) {
                 case R.id.card_checkbox:
-                    final boolean isIncluded = ((CheckBox) view).isChecked();
-                    realmInstance.executeTransaction(new Realm.Transaction() {
-                        @Override
-                        public void execute(Realm realm) {
-                            Product product = realmInstance.where(Product.class)
-                                    .equalTo(Product.ID, boundProduct.getId())
-                                    .findFirst();
-                            product.setIncluded(isIncluded);
-                        }
-                    });
-                    mTotal.setText(getTotal());
+                    boolean isIncluded = ((CheckBox) view).isChecked();
+                    realmHelper.setIncludedById(boundProduct.getId(), isIncluded);
+                    total.setText(getTotal());
                     adapter.notifyDataSetChanged();
                     break;
                 case R.id.card_delete:
                     if (boundProduct.isListed()) {
-                        realmInstance.executeTransaction(new Realm.Transaction() {
-                            @Override
-                            public void execute(Realm realm) {
-                                Product product = realmInstance.where(Product.class)
-                                        .equalTo(Product.ID, boundProduct.getId())
-                                        .findFirst();
-                                product.setBought(false);
-                                product.setIncluded(false);
-                            }
-                        });
+                        realmHelper.removeBoughtById(boundProduct.getId());
                         adapter.notifyItemChanged(getAdapterPosition());
-                        mTotal.setText(getTotal());
+                        total.setText(getTotal());
                     } else {
-                        realmInstance.executeTransaction(new Realm.Transaction() {
-                            @Override
-                            public void execute(Realm realm) {
-                                realmInstance.where(Product.class)
-                                        .equalTo(Product.ID, boundProduct.getId())
-                                        .findFirst().deleteFromRealm();
-                            }
-                        });
+                        realmHelper.removeById(boundProduct.getId());
                         adapter.notifyDataSetChanged();
-                        mTotal.setText(getTotal());
+                        total.setText(getTotal());
                     }
                     break;
             }

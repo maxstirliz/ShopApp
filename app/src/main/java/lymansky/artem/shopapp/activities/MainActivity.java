@@ -29,6 +29,7 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 import lymansky.artem.shopapp.R;
 import lymansky.artem.shopapp.model.Product;
+import lymansky.artem.shopapp.utils.RealmHelper;
 import lymansky.artem.shopapp.utils.TextUtils;
 
 public class MainActivity extends AppCompatActivity {
@@ -48,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private Switch mSwitch;
     private TextView mSwitchText;
 
+    RealmHelper realmHelper;
     private Realm realmInstance;
     private RealmResults<Product> productsBought;
     private RealmResults<Product> items;
@@ -59,14 +61,10 @@ public class MainActivity extends AppCompatActivity {
 
 //        Initializations
         LinearLayout llBottomSheet = findViewById(R.id.bottom_sheet);
-        realmInstance = Realm.getDefaultInstance();
-        productsBought = realmInstance.where(Product.class)
-                .equalTo(Product.BOUGHT, true)
-                .findAll();
-        items = realmInstance.where(Product.class)
-                .equalTo(Product.LISTED, true)
-                .findAll()
-                .sort(Product.ID);
+        realmHelper = RealmHelper.getHelper();
+        realmInstance = realmHelper.getRealm();
+        productsBought = realmHelper.getProducts();
+        items = realmHelper.getShoppingList();
         mSwitch = findViewById(R.id.modeSwitch);
         mSwitch.setChecked(true);
         mSwitchText = findViewById(R.id.modeText);
@@ -114,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
                             product.setNumber(number);
 
 
-                            if(mSwitch.isChecked()) {
+                            if (mSwitch.isChecked()) {
                                 product.setBought(true);
                                 product.setIncluded(true);
                                 product.setListed(false);
@@ -143,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
         mGoToCart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(realmInstance.isEmpty()) {
+                if (realmInstance.isEmpty()) {
                     Toast.makeText(MainActivity.this, "The Cart is empty", Toast.LENGTH_SHORT)
                             .show();
                 } else {
@@ -156,8 +154,8 @@ public class MainActivity extends AppCompatActivity {
         mNumber.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId == EditorInfo.IME_ACTION_DONE) {
-                    if(!getTotal().equals(TextUtils.getCurrencyValue(0))) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    if (!getTotal().equals(TextUtils.getCurrencyValue(0))) {
                         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                         mAddButton.setText(getString(R.string.add_button) + " " + getTotal());
@@ -182,8 +180,8 @@ public class MainActivity extends AppCompatActivity {
         setFocusShowKeyboard(mName);
     }
 
-    private void setUpMode () {
-        if(mSwitch.isChecked()) {
+    private void setUpMode() {
+        if (mSwitch.isChecked()) {
             mNumber.setEnabled(true);
             mPrice.setEnabled(true);
             mSwitchText.setText(getString(R.string.switchOn));
@@ -202,8 +200,8 @@ public class MainActivity extends AppCompatActivity {
 
     private String getTotal() {
         double value = 0;
-        for(Product product : productsBought) {
-            if(product.isIncluded()) {
+        for (Product product : productsBought) {
+            if (product.isIncluded()) {
                 value += product.getTotal();
             }
         }
